@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>EURUSD Bias Tracker</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#0f1115">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="EURUSD Bias">
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--text:#14171c;--muted:#6a7280;--line:#e2e5ea;--bull:#16a34a;--bear:#dc2626;--neu:#8a93a2;--accent:#2563eb;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1115;--card:#181b21;--text:#eceff4;--muted:#9099a8;--line:#272b33;--bull:#22c55e;--bear:#f87171;--neu:#6b7380;--accent:#60a5fa}}
+:root[data-theme="dark"]{--bg:#0f1115;--card:#181b21;--text:#eceff4;--muted:#9099a8;--line:#272b33;--bull:#22c55e;--bear:#f87171;--neu:#6b7380;--accent:#60a5fa}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;line-height:1.4}
+.wrap{max-width:560px;margin:0 auto;padding:16px 14px 40px}
+h1{font-size:20px;margin:4px 0 2px}
+.sub{color:var(--muted);font-size:13px;margin-bottom:14px}
+.tabs{display:flex;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:12px}
+.tab{flex:1;border:0;background:none;color:var(--muted);padding:10px 0;border-radius:9px;font-size:15px;font-weight:600}
+.tab.on{background:var(--accent);color:#fff}
+.verdict{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;text-align:center}
+.vlabel{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.vbig{font-size:28px;font-weight:800;margin:2px 0}
+.bar{display:flex;height:8px;border-radius:6px;overflow:hidden;background:var(--line);margin:8px 0 6px}
+.bar span{display:block;height:100%}
+.vsmall{font-size:13px;color:var(--muted)}
+.item{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px}
+.it{font-weight:700;font-size:15px}
+.ih{font-size:12.5px;color:var(--muted);margin:2px 0 10px}
+.btns{display:flex;gap:6px}
+.btn{flex:1;border:1px solid var(--line);background:none;color:var(--text);border-radius:9px;padding:9px 0;font-size:14px;font-weight:600}
+.btn.bull.on{background:var(--bull);border-color:var(--bull);color:#fff}
+.btn.bear.on{background:var(--bear);border-color:var(--bear);color:#fff}
+.btn.neu.on{background:var(--neu);border-color:var(--neu);color:#fff}
+textarea{width:100%;min-height:80px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--text);padding:10px;font:inherit;font-size:14px;resize:vertical}
+.row{display:flex;gap:8px;margin-top:10px}
+.row button{flex:1;padding:11px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--text);font-weight:600;font-size:14px}
+.hist{margin-top:16px}
+.hist h2{font-size:14px;margin:0 0 8px;color:var(--muted)}
+.h{display:flex;justify-content:space-between;font-size:13px;padding:7px 0;border-bottom:1px solid var(--line)}
+.tag{font-weight:700}
+.data{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:12px}
+.dh{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.dh button{border:0;background:var(--accent);color:#fff;border-radius:9px;padding:9px 14px;font-weight:600;font-size:14px}
+.dh button:disabled{opacity:.5}
+.dr{display:flex;justify-content:space-between;font-size:14px;padding:6px 0;border-top:1px solid var(--line)}
+.dr b{font-variant-numeric:tabular-nums}
+.foot{font-size:11.5px;color:var(--muted);margin-top:8px}
+.de{width:80px;border:1px solid var(--line);background:var(--bg);color:var(--text);border-radius:8px;padding:5px 8px;font-size:14px;text-align:right}
+.sg{margin-top:8px;width:100%;border:1px dashed var(--accent);background:none;color:var(--accent);border-radius:9px;padding:8px;font-size:13px;font-weight:600}
+.inst{display:none;background:var(--card);border:1px solid var(--accent);border-radius:14px;padding:12px;margin-bottom:12px;font-size:14px}
+.inst button{margin-top:8px;border:0;background:var(--accent);color:#fff;border-radius:9px;padding:10px 14px;font-weight:600;font-size:14px;width:100%}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>EURUSD Bias Tracker</h1>
+  <div class="sub">Score each factor. Bias only counts when most agree.</div>
+  <div class="inst" id="inst"><div id="insttxt"></div><button id="instbtn" style="display:none">Install app</button></div>
+  <div class="tabs" id="tabs"></div>
+  <div class="verdict">
+    <div class="vlabel" id="plabel"></div>
+    <div class="vbig" id="vbig">Neutral</div>
+    <div class="bar"><span id="bb" style="background:var(--bull)"></span><span id="bn" style="background:var(--neu)"></span><span id="br" style="background:var(--bear)"></span></div>
+    <div class="vsmall" id="vsmall"></div>
+  </div>
+  <div class="data">
+    <div class="dh"><b>Live data</b><button id="fetch">Fetch data</button></div>
+    <div id="fstat" class="vsmall">Tap to pull the latest EURUSD price and US yields.</div>
+    <div id="fdata"></div>
+    <div class="foot">Not included: COT, economic calendar, DXY and German yields (not available on the connected plans). Enter the German 2y yield by hand to get the spread. On Daily, suggestions appear under matching factors.</div>
+  </div>
+  <div id="items"></div>
+  <textarea id="notes" placeholder="Notes: key levels, what you saw, trade idea…"></textarea>
+  <div class="row"><button id="save">Save to log</button><button id="reset">Reset</button></div>
+  <div class="hist"><h2>Recent log</h2><div id="hist"></div></div>
+</div>
+<script>
+var DATA={
+Monthly:[
+["Central bank path","ECB vs Fed: statements, projections, rate pricing (FedWatch, ECB OIS)"],
+["Rate differential","US 2y minus German 2y yield spread. Widening for US = bearish EURUSD"],
+["Inflation & growth","CPI/PCE, GDP, PMIs for Eurozone vs US"],
+["COT positioning","CFTC Euro FX: asset managers and leveraged funds"],
+["Monthly structure & DXY","Trend, key levels, monthly close, dollar index"]],
+Weekly:[
+["Key data this week","NFP, CPI, retail sales, flash PMIs, ZEW/Ifo, ECB/Fed speakers"],
+["COT change","Week-over-week shift in positioning, not just the level"],
+["Weekly structure","Prior week high/low, weekly close vs key levels"],
+["DXY trend","Dollar direction on the weekly chart"],
+["Options / CME 6E levels","Open interest and big option strikes as magnet levels"]],
+Daily:[
+["Session behavior","Asian range, London open, price vs previous day high/low"],
+["Today's calendar","Time and expected impact of releases"],
+["Yields & DXY","US 2y and 10y moves; EURUSD usually follows"],
+["Risk sentiment","Equities and oil"],
+["Daily levels","Previous close, pivots, CME open interest levels"]]
+};
+var TFS=["Monthly","Weekly","Daily"],KEY="eurusd_bias_v1";
+var S={tf:"Daily",scores:{Monthly:[0,0,0,0,0],Weekly:[0,0,0,0,0],Daily:[0,0,0,0,0]},notes:{Monthly:"",Weekly:"",Daily:""},period:{},log:[]};
+function pkey(tf){var d=new Date(),y=d.getFullYear(),m=d.getMonth()+1,dd=d.getDate();
+ if(tf==="Monthly")return y+"-"+m;
+ if(tf==="Daily")return y+"-"+m+"-"+dd;
+ var w=new Date(d);w.setDate(d.getDate()-((d.getDay()+6)%7));return "W"+w.getFullYear()+"-"+(w.getMonth()+1)+"-"+w.getDate();}
+function load(){try{var r=localStorage.getItem(KEY);if(r){var o=JSON.parse(r);for(var k in o)S[k]=o[k];}}catch(e){}
+ TFS.forEach(function(t){if(S.period[t]!==pkey(t)){S.scores[t]=[0,0,0,0,0];S.notes[t]="";S.period[t]=pkey(t);}});}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+function verdict(arr){var b=0,r=0,n=0;arr.forEach(function(v){if(v>0)b++;else if(v<0)r++;else n++;});
+ var v="Neutral",c="var(--neu)";if(b>=3&&b>r){v="Bullish";c="var(--bull)";}else if(r>=3&&r>b){v="Bearish";c="var(--bear)";}
+ return{b:b,r:r,n:n,v:v,c:c};}
+function render(){
+ var t=S.tf,tabs=document.getElementById("tabs");tabs.innerHTML="";
+ TFS.forEach(function(x){var b=document.createElement("button");b.className="tab"+(x===t?" on":"");b.textContent=x;b.onclick=function(){S.notes[S.tf]=document.getElementById("notes").value;S.tf=x;persist();render();};tabs.appendChild(b);});
+ var sc=S.scores[t],v=verdict(sc);
+ document.getElementById("plabel").textContent=t+" bias";
+ var vb=document.getElementById("vbig");vb.textContent=v.v;vb.style.color=v.c;
+ document.getElementById("bb").style.width=v.b*20+"%";document.getElementById("bn").style.width=v.n*20+"%";document.getElementById("br").style.width=v.r*20+"%";
+ document.getElementById("vsmall").textContent=v.b+" bullish · "+v.n+" neutral · "+v.r+" bearish"+(v.v==="Neutral"&&(v.b+v.r)>0?" — not enough agreement":"");
+ var box=document.getElementById("items");box.innerHTML="";
+ DATA[t].forEach(function(it,i){var d=document.createElement("div");d.className="item";
+  d.innerHTML='<div class="it"></div><div class="ih"></div><div class="btns"></div>';
+  d.querySelector(".it").textContent=it[0];d.querySelector(".ih").textContent=it[1];
+  var bt=d.querySelector(".btns");
+  [["Bull",1,"bull"],["Neutral",0,"neu"],["Bear",-1,"bear"]].forEach(function(o){var b=document.createElement("button");b.className="btn "+o[2]+(sc[i]===o[1]&&(o[1]!==0||S.touched&&S.touched[t+i])?" on":"");b.textContent=o[0];
+   b.onclick=function(){sc[i]=o[1];S.touched=S.touched||{};S.touched[t+i]=1;S.notes[t]=document.getElementById("notes").value;persist();render();};bt.appendChild(b);});
+  if(S.tf==="Daily"&&M.sugg&&M.sugg[it[0]]!==undefined){var sv=M.sugg[it[0]],sb=document.createElement("button");sb.className="sg";sb.textContent="Suggested from live data: "+(sv>0?"Bull":sv<0?"Bear":"Neutral")+" (tap to apply)";sb.onclick=function(){sc[i]=sv;S.touched=S.touched||{};S.touched[t+i]=1;persist();render();};d.appendChild(sb);}
+  box.appendChild(d);});
+ document.getElementById("notes").value=S.notes[t]||"";
+ var h=document.getElementById("hist");h.innerHTML="";
+ var items=S.log.filter(function(l){return l.tf===t}).slice(0,6);
+ if(!items.length){h.innerHTML='<div class="vsmall">No saved entries yet.</div>';}
+ items.forEach(function(l){var d=document.createElement("div");d.className="h";var a=document.createElement("span");a.textContent=l.date;var b=document.createElement("span");b.className="tag";b.textContent=l.v;b.style.color=l.c;d.appendChild(a);d.appendChild(b);h.appendChild(d);});
+}
+document.getElementById("save").onclick=function(){var t=S.tf;S.notes[t]=document.getElementById("notes").value;var v=verdict(S.scores[t]);
+ var d=new Date();S.log.unshift({tf:t,v:v.v,c:v.c,date:d.toLocaleDateString(undefined,{month:"short",day:"numeric"})+" "+d.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})});
+ S.log=S.log.slice(0,60);persist();render();};
+document.getElementById("reset").onclick=function(){S.scores[S.tf]=[0,0,0,0,0];S.notes[S.tf]="";S.touched={};persist();render();};
+var SRV={td:"Twelve Data",av:"Alpha Vantage MCP Server"};
+var M={px:null,prev:null,pct:null,hi:null,lo:null,y2:null,y2p:null,y10:null,y10p:null,de2:"",at:"",sugg:null};
+function parseRow(t){var L=String(t).trim().split(/\r?\n/);if(L.length<2)return null;var h=L[0].split(";"),v=L[1].split(";"),o={};h.forEach(function(k,i){o[k]=v[i];});return o;}
+function yields(p){var s=typeof p==="string"?p:JSON.stringify(p),re=/\\?"date\\?":\s*\\?"([\d-]+)\\?",(?:\s|\\n)*\\?"value\\?":\s*\\?"([\d.]+)\\?"/g,m,a=[];while((m=re.exec(s))){a.push([m[1],parseFloat(m[2])]);}return a;}
+function why(name,e){var c=e&&e.code,n=name;
+ if(c==="needs_reauth")return n+": reconnect this connector in claude.ai.";
+ if(c==="server_not_connected")return n+": connector not connected.";
+ if(c==="approval_required"||c==="not_granted")return n+": needs your approval. Allow it when claude.ai asks.";
+ if(c==="rate_limited")return n+": rate limit reached, wait a minute and retry.";
+ if(c==="bad_shape")return n+": data came back in an unexpected format.";
+ if(c==="tool_error")return n+": the provider reported an error (check your plan or key).";
+ return n+": couldn’t load.";}
+function f2(x,d){return x==null||isNaN(x)?"–":x.toFixed(d);}
+function chg(x,d){return x==null||isNaN(x)?"":(x>0?"+":"")+x.toFixed(d);}
+function row(label,val,color){var d=document.createElement("div");d.className="dr";var a=document.createElement("span");a.textContent=label;var b=document.createElement("b");b.textContent=val;if(color)b.style.color=color;d.appendChild(a);d.appendChild(b);return d;}
+function renderData(){var box=document.getElementById("fdata");box.innerHTML="";
+ if(M.px==null&&M.y2==null)return;
+ var up="var(--bull)",dn="var(--bear)";
+ if(M.px!=null)box.appendChild(row("EURUSD",f2(M.px,5)+"  ("+chg(M.pct,2)+"%)",M.pct>0?up:M.pct<0?dn:null));
+ if(M.hi!=null)box.appendChild(row("Day range",f2(M.lo,5)+" – "+f2(M.hi,5)));
+ if(M.y2!=null){var d2=M.y2p!=null?M.y2-M.y2p:null;box.appendChild(row("US 2y yield",f2(M.y2,2)+"%  ("+chg(d2,2)+")",d2>0?dn:d2<0?up:null));}
+ if(M.y10!=null){var d10=M.y10p!=null?M.y10-M.y10p:null;box.appendChild(row("US 10y yield",f2(M.y10,2)+"%  ("+chg(d10,2)+")",d10>0?dn:d10<0?up:null));}
+ var r=document.createElement("div");r.className="dr";var l=document.createElement("span");l.textContent="German 2y (manual)";var inp=document.createElement("input");inp.className="de";inp.setAttribute("inputmode","decimal");inp.placeholder="%";inp.value=M.de2||"";
+ inp.oninput=function(){M.de2=inp.value;S.m=M;persist();sp.textContent=spread();};r.appendChild(l);r.appendChild(inp);box.appendChild(r);
+ var sp=document.createElement("b");sp.textContent=spread();var rr=document.createElement("div");rr.className="dr";var ll=document.createElement("span");ll.textContent="US–DE 2y spread";rr.appendChild(ll);rr.appendChild(sp);box.appendChild(rr);
+}
+function spread(){var de=parseFloat(String(M.de2).replace(",","."));if(M.y2==null||isNaN(de))return "–";return (M.y2-de).toFixed(2)+" pts";}
+async function fetchData(){
+ var st=document.getElementById("fstat"),btn=document.getElementById("fetch");btn.disabled=true;st.textContent="Fetching…";
+ var mcp=null;try{if(typeof claude!=="undefined")mcp=await claude.use("mcp");}catch(e){}
+ if(!mcp){st.textContent="Live data isn’t available in this view. Open the page in claude.ai while signed in.";btn.disabled=false;return;}
+ var errs=[],ok=0,stamp=null;
+ async function run(name,srv,tool,input,fn){try{var o={};if(typeof AbortSignal!=="undefined"&&AbortSignal.timeout)o.signal=AbortSignal.timeout(25000);
+  var r=await mcp.callTool(srv,tool,input,o);var p=r.payload!==undefined?r.payload:(r.content&&r.content[0]&&r.content[0].text);fn(p);ok++;var t=r.cache&&r.cache.storedAt?r.cache.storedAt:Date.now();stamp=stamp==null?t:Math.min(stamp,t);}catch(e){errs.push(why(name,e));}}
+ await Promise.all([
+  run("Price",SRV.td,"get_quote",{symbol:"EUR/USD"},function(p){var o=parseRow(p);if(!o||!o.close)throw{code:"bad_shape"};M.px=+o.close;M.prev=+o.previous_close;M.pct=+o.percent_change;M.hi=+o.high;M.lo=+o.low;}),
+  run("US 2y",SRV.av,"TREASURY_YIELD",{maturity:"2year",interval:"daily",datatype:"json"},function(p){var a=yields(p);if(!a.length)throw{code:"bad_shape"};M.y2=a[0][1];M.y2p=a[1]?a[1][1]:null;}),
+  run("US 10y",SRV.av,"TREASURY_YIELD",{maturity:"10year",interval:"daily",datatype:"json"},function(p){var a=yields(p);if(!a.length)throw{code:"bad_shape"};M.y10=a[0][1];M.y10p=a[1]?a[1][1]:null;})
+ ]);
+ var sg={};if(M.pct!=null&&!isNaN(M.pct))sg["Session behavior"]=M.pct>0.1?1:M.pct<-0.1?-1:0;
+ if(M.y2!=null&&M.y2p!=null){var dy=M.y2-M.y2p;sg["Yields & DXY"]=dy>0.03?-1:dy<-0.03?1:0;}
+ M.sugg=sg;if(stamp!=null)M.at=new Date(stamp).toLocaleString(undefined,{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"});
+ S.m=M;persist();
+ st.textContent=(ok?"Updated "+M.at+". ":"")+errs.join(" ");
+ btn.disabled=false;renderData();render();}
+document.getElementById("fetch").onclick=fetchData;
+load();if(S.m)M=S.m;render();renderData();
+(function(){var box=document.getElementById("inst"),tx=document.getElementById("insttxt"),bt=document.getElementById("instbtn"),dp=null;
+ var standalone=(window.matchMedia&&matchMedia("(display-mode: standalone)").matches)||navigator.standalone;
+ if(standalone)return;
+ var ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
+ try{if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0)navigator.serviceWorker.register("sw.js").catch(function(){});}catch(e){}
+ window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();dp=e;tx.textContent="Install this app on your home screen for one-tap access.";bt.style.display="block";box.style.display="block";});
+ bt.onclick=function(){if(!dp)return;dp.prompt();dp.userChoice.then(function(){dp=null;box.style.display="none";});};
+ window.addEventListener("appinstalled",function(){box.style.display="none";});
+ if(ios){tx.textContent="To add this app to your home screen: tap the Share button in Safari, then “Add to Home Screen”.";box.style.display="block";}
+})();
+
+</script>
+</body>
+</html>
